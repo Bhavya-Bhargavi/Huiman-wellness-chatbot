@@ -30,7 +30,7 @@ function App() {
     setIsLoading(true);
 
     try {
-      const res = await axios.post("http://127.0.0.1:8000/chat",{ message: messageToSend });
+      const res = await axios.post("/api/chat",{ message: messageToSend });
       setMessages((prev) => [...prev, { sender: "bot", text: res.data.data.summary, stats: res.data.data }]);
     } catch (error) {
       setMessages((prev) => [...prev, { sender: "bot", text: "Connection error. Please try again." }]);
