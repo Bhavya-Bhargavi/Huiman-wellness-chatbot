@@ -52,6 +52,8 @@ async def chat(request: ChatRequest):
         print(f"Groq Error: {e}")
         return {"error": str(e)}
 
+# For Vercel serverless - the app is automatically called
+# For local development: uvicorn api/index.py:app --reload
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="127.0.0.1", port=8000)
