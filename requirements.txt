@@ -2,4 +2,6 @@ fastapi
 groq
 python-dotenv
 pydantic
-uvicorn
+sentence-transformers
+faiss-cpu
+numpy

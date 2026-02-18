@@ -9,39 +9,61 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
 
   const quickMoods = [
-    { label: "Energized", icon: <Zap size={18}/>, prompt: "I'm feeling super energized and ready to take on the day!" },
-    { label: "Stressed", icon: <Wind size={18}/>, prompt: "I've had a really stressful day at work and need to unwind." },
-    { label: "Tired", icon: <Battery size={18}/>, prompt: "My energy levels are low, I feel quite exhausted." },
-    { label: "Calm", icon: <Moon size={18}/>, prompt: "I'm feeling very peaceful and mindful right now." },
-    { label: "Productive", icon: <Coffee size={18}/>, prompt: "I've been very productive today and feel proud." },
-    { label: "Anxious", icon: <Sparkles size={18}/>, prompt: "I'm feeling a bit anxious about upcoming events." },
-    { label: "Happy", icon: <Smile size={18}/>, prompt: "Everything is going great, I'm in a wonderful mood!" },
-    { label: "Low", icon: <Heart size={18}/>, prompt: "I'm feeling a bit down and could use some encouragement." },
-    { label: "Focused", icon: <Sun size={18}/>, prompt: "I'm in deep focus mode and want to maintain this state." },
-    { label: "Social", icon: <MessageCircle size={18}/>, prompt: "I'm feeling very social and chatty today." },
+    { label: "Energized", icon: <Zap size={18} />, prompt: "I'm feeling super energized and ready to take on the day!" },
+    { label: "Stressed", icon: <Wind size={18} />, prompt: "I've had a really stressful day at work and need to unwind." },
+    { label: "Tired", icon: <Battery size={18} />, prompt: "My energy levels are low, I feel quite exhausted." },
+    { label: "Calm", icon: <Moon size={18} />, prompt: "I'm feeling very peaceful and mindful right now." },
+    { label: "Productive", icon: <Coffee size={18} />, prompt: "I've been very productive today and feel proud." },
+    { label: "Anxious", icon: <Sparkles size={18} />, prompt: "I'm feeling a bit anxious about upcoming events." },
+    { label: "Happy", icon: <Smile size={18} />, prompt: "Everything is going great, I'm in a wonderful mood!" },
+    { label: "Low", icon: <Heart size={18} />, prompt: "I'm feeling a bit down and could use some encouragement." },
+    { label: "Focused", icon: <Sun size={18} />, prompt: "I'm in deep focus mode and want to maintain this state." },
+    { label: "Social", icon: <MessageCircle size={18} />, prompt: "I'm feeling very social and chatty today." },
   ];
-
   const sendMessage = async (textOverride) => {
-    const messageToSend = textOverride || input;
-    if (!messageToSend.trim() || isLoading) return;
+  const messageToSend = textOverride || input;
+  if (!messageToSend.trim() || isLoading) return;
 
-    setMessages((prev) => [...prev, { sender: "user", text: messageToSend }]);
-    setInput("");
-    setIsLoading(true);
+  // UI Updates: Add user message and start loading
+  setMessages((prev) => [...prev, { sender: "user", text: messageToSend }]);
+  setInput("");
+  setIsLoading(true);
 
-    try {
-      const res = await axios.post("/api/chat",{ message: messageToSend });
-      setMessages((prev) => [...prev, { sender: "bot", text: res.data.data.summary, stats: res.data.data }]);
-    } catch (error) {
-      setMessages((prev) => [...prev, { sender: "bot", text: "Connection error. Please try again." }]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  try {
+    const response = await fetch("http://127.0.0.1:8000/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: messageToSend })
+    });
+
+    const result = await response.json();
+    const aiData = result.data;
+    
+    // Log for debugging
+    console.log("✅ AI DATA:", aiData);
+
+    // Extraction with fallbacks
+    const displayMessage = aiData.summary || aiData.message || "I couldn't find a summary in the response.";
+
+    setMessages((prev) => [
+      ...prev, 
+      { 
+        sender: "bot", 
+        text: displayMessage, 
+        stats: aiData // Contains mood, energy_score, etc.
+      }
+    ]);
+
+  } catch (error) {
+    setMessages((prev) => [...prev, { sender: "bot", text: "Connection error. Check backend." }]);
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   return (
     <div className="app-layout">
-      {/* SIDEBAR */}
+
       <aside className="sidebar">
         <div className="sidebar-header">
           <h3>Mood Presets</h3>
@@ -57,7 +79,7 @@ function App() {
         </div>
       </aside>
 
-      {/* MAIN CHAT */}
+
       <main className="chat-container">
         <header className="chat-header">🌿 Wellness Companion</header>
         <div className="chat-box">
@@ -78,9 +100,9 @@ function App() {
         </div>
 
         <div className="input-box">
-          <input 
-            value={input} 
-            placeholder="Type your own mood..." 
+          <input
+            value={input}
+            placeholder="Type your own mood..."
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
           />
